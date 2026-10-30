@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#080d18">
+<title>Mini GBA — Arcade</title>
+<style>
+:root{color-scheme:dark;--bg:#050b18;--panel:#0d1930;--line:#254b7b;--accent:#58a6ff;--muted:#a9bddb}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at top,#123d78,#071329 58%,#030711 100%);color:#f4f7fb;font-family:system-ui,Arial,sans-serif}
+body{padding:14px}main{max-width:1000px;margin:auto}.panel{background:linear-gradient(145deg,#102448,#091326 68%);border:1px solid #2b5a91;border-radius:22px;padding:18px;box-shadow:0 18px 48px #0008,inset 0 1px #ffffff0b}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;display:grid;place-items:center;background:linear-gradient(145deg,#1765bb,#0b2a57);border:1px solid #5ba8ff;border-radius:14px;font-size:25px;box-shadow:0 0 22px #2787ff35}h1{font-size:clamp(1.45rem,4vw,2.15rem);margin:0}.sub{color:var(--muted);margin:5px 0 0;font-size:.9rem}.tag{color:#b6d9ff;background:#102b50;padding:5px 10px;border-radius:99px;font-size:.78rem;white-space:nowrap}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 12px}button,.filebtn{background:linear-gradient(180deg,#1a355c,#122642);border:1px solid #3b679c;color:white;border-radius:12px;padding:11px 14px;font:inherit;font-weight:650;cursor:pointer;display:inline-block;text-align:center}button:active,.filebtn:active{background:#174f8f;border-color:var(--accent)}button.active,.primary{background:linear-gradient(180deg,#176bd0,#104a98);border-color:#65b4ff;box-shadow:0 4px 16px #1675d533}.filebtn input{display:none}.page{display:none}.page.active{display:block}
+#status{margin:12px 0;padding:12px;background:#090f1b;border:1px solid #28364b;border-radius:12px;color:#d7e1ee;overflow-wrap:anywhere}
+#gameFrame{background:#02050b;border:5px solid #244d7c;border-radius:14px;box-shadow:inset 0 0 0 2px #0b1a31,0 8px 26px #0007;min-height:180px;aspect-ratio:3/2;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#gameFrame canvas, #gameFrame iframe {width:100%!important;height:100%!important;object-fit:contain}
+#gameFrame.empty:after{content:"MINI GBA  •  ESCOLHA UM JOGO";position:absolute;inset:0;display:grid;place-items:center;color:#8195b0;font:700 13px monospace;letter-spacing:1px;text-align:center;padding:18px;pointer-events:none}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.muted{color:var(--muted);font-size:.9rem;line-height:1.5}.section{margin-top:18px;padding-top:15px;border-top:1px solid #2b3b50}
+#romInput{display:none}.library{display:grid;gap:9px;margin-top:12px}.gameItem{display:flex;align-items:center;gap:10px;background:#08162b;border:1px solid #25466f;border-radius:12px;padding:11px}.gameIcon{font-size:24px}.gameInfo{min-width:0;flex:1}.gameName{font-weight:700;overflow-wrap:anywhere}.gameSize{font-size:.8rem;color:#aebbd0}.gameItem button{flex:0 0 auto;padding:8px 11px}
+.tip{background:linear-gradient(135deg,#102b50,#0a1a31);border:1px solid #2a5c92;padding:12px;border-radius:12px;color:#d7e9ff;line-height:1.5}
+footer{font-size:.8rem;color:#8e9eb5;margin-top:15px}
+@media(max-width:600px){body{padding:7px}.panel{padding:12px;border-radius:15px}#gameFrame{min-height:170px;border-width:3px}.row button,.row .filebtn{min-width:44%;padding:11px 8px}nav button{flex:1;padding:10px 8px}}
+@media(orientation:landscape) and (max-height:600px){body{padding:4px}main{max-width:none}.panel{padding:8px;border-radius:10px}header .logo{width:36px;height:36px}.sub,.tag{display:none}nav{margin:8px 0}#gameFrame{height:calc(100dvh - 155px);min-height:120px;aspect-ratio:auto;width:100%}#status{margin:6px 0;padding:7px;font-size:.8rem}.section{margin-top:8px;padding-top:8px}}
+</style>
+</head>
+<body>
+<main><section class="panel">
+<header><div class="brand"><div class="logo">🎮</div><div><h1>Mini GBA</h1><p class="sub">Seu cantinho retrô no Android</p></div></div><span class="tag">ARCADE EDITION</span></header>
+<nav>
+<button class="active" data-page="home">🏠 Início</button>
+<button data-page="library">📁 Minha biblioteca</button>
+<button data-page="settings">⚙️ Opções</button>
+<button data-page="multiplayer">👥 Multiplayer</button>
+</nav>
+<section id="home" class="page active">
+<div class="tip">Bem-vindo! Escolha um jogo na biblioteca e toque em <b>Jogar</b>. Para uma experiência melhor, vire o celular de lado. 📱↔️</div>
+<div id="status">Pronto para jogar. Adicione uma ROM .gba na biblioteca.</div>
+<div class="section" style="margin-top:10px;padding-top:10px">
+  <h3 style="margin:0 0 8px">💾 Continuar de um Save State</h3>
+  <p class="muted" style="margin:0 0 9px">Escolha o arquivo <b>.state</b> que você baixou do emulador. O arquivo de salvamento normal do Pokémon (<b>.sav</b>) é diferente. Para garantir o carregamento, selecione-o antes de iniciar o jogo.</p>
+  <div class="row">
+    <label class="filebtn" for="stateInput">📂 Escolher arquivo .state<input id="stateInput" type="file" accept=".state,.state1,.state2,.state3,.state4,.state5,.state6,.state7,.state8,.state9,.bin" style="display:none"></label>
+    <button id="clearState">✖ Remover save escolhido</button>
+  </div>
+  <p id="stateStatus" class="muted" style="margin:8px 0 0">Nenhum Save State selecionado.</p>
+</div>
+<div id="gameFrame" class="empty"></div>
+<div class="row" style="margin-top:10px">
+<button class="primary" id="playSelected">▶ Jogar selecionado</button>
+<button id="fullscreen">⛶ Tela cheia</button>
+<button id="landscape">↔️ Girar tela</button>
+</div>
+<p class="muted">Os controles virtuais do núcleo aparecem durante o jogo.</p>
+</section>
+<section id="library" class="page">
+<h2>📁 Minha biblioteca</h2>
+<p class="muted">Toque para escolher jogos individuais ou selecione uma pasta inteira de ROMs.</p>
+<div class="row">
+<label class="filebtn" for="romInput">➕ Adicionar jogo(s)<input id="romInput" type="file" accept=".gba,.zip" multiple></label>
+<button id="folderBtn">📂 Escolher pasta</button>
+</div>
+<input id="folderInput" type="file" accept=".gba,.zip" webkitdirectory directory multiple style="display:none">
+<div class="row" style="margin-top:9px"><button id="removeAll">Limpar lista</button></div>
+<div id="libraryList" class="library"><p class="muted">Nenhum jogo adicionado ainda.</p></div>
+</section>
+<section id="multiplayer" class="page">
+<h2>👥 Multiplayer Wi-Fi</h2>
+<div class="tip">Esta é a primeira versão da tela multiplayer. Os botões abaixo organizam a interface, mas ainda não conectam os celulares: para isso precisamos integrar um servidor de sinalização e testar a comunicação Link Cable do GBA.</div>
+<div class="section">
+<h3>🏠 Criar sala</h3>
+<p class="muted">Inicie uma sala quando a conexão multiplayer real estiver configurada.</p>
+<button class="primary" id="createRoom">Criar sala</button>
+</div>
+<div class="section">
+<h3>🔗 Entrar na sala</h3>
+<label for="roomCode" class="muted">Código da sala do seu amigo</label>
+<input id="roomCode" type="text" maxlength="32" placeholder="Digite o código aqui" style="display:block;width:100%;margin:8px 0;padding:12px;border-radius:10px;border:1px solid #4b607b;background:#090f1b;color:white;font:inherit">
+<div class="row">
+<button id="joinRoom">Entrar na sala</button>
+<button id="copyRoom">Copiar código</button>
+</div>
+</div>
+<div class="section">
+<h3>📡 Estado da conexão</h3>
+<div id="multiplayerStatus" role="status" class="tip">Não conectado — aguardando a implementação da comunicação entre os jogadores.</div>
+</div>
+<p class="muted">Importante: estar na mesma rede Wi-Fi não conecta automaticamente os emuladores. A comunicação do Link Cable precisa ser suportada e sincronizada entre as duas sessões.</p>
+</section>
+<section id="settings" class="page">
+<h2>⚙️ Opções</h2>
+<div class="section"><h3>Orientação de tela</h3><button id="lockLandscape">🔒 Tentar bloquear em paisagem</button></div>
+<div class="section"><h3>Sobre o emulador</h3><p class="muted">O Mini GBA usa o núcleo web do EmulatorJS.</p></div>
+</section>
+<footer>Mini GBA Arcade • Projeto HTML</footer>
+</section></main>
+<script>
+const DATA='https://cdn.emulatorjs.org/stable/data/';
+const $=id=>document.getElementById(id);
+const romInput=$('romInput'),folderInput=$('folderInput'),statusBox=$('status'),gameFrame=$('gameFrame'),list=$('libraryList');
+let games=[],selectedId=null,activeUrl=null,started=false,loaderScript=null,pendingStateFile=null,pendingStateUrl=null;
+function setStatus(t){statusBox.textContent=t}
+function humanSize(n){return n<1024*1024?(n/1024).toFixed(0)+' KB':(n/1024/1024).toFixed(2)+' MB'}
+function switchPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===name));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===name))}
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>switchPage(b.dataset.page)));
+function addFiles(files){
+ let added=0;
+ for(const f of files){
+  const n=f.name.toLowerCase();
+  if(!(n.endsWith('.gba')||n.endsWith('.zip')))continue;
+  const id='g'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  games.push({id,file:f,name:f.webkitRelativePath||f.name});if(!selectedId)selectedId=id;added++;
+ }
+ renderLibrary();
+ setStatus(added?`${added} arquivo(s) adicionado(s) à biblioteca.`:'Não encontrei arquivos .gba ou .zip.');
+}
+function renderLibrary(){
+ if(!games.length){list.innerHTML='<p class="muted">Nenhum jogo adicionado ainda.</p>';return}
+ list.innerHTML='';
+ games.forEach(g=>{
+  const item=document.createElement('div');item.className='gameItem';
+  const icon=document.createElement('span');icon.className='gameIcon';icon.textContent='🕹️';
+  const info=document.createElement('div');info.className='gameInfo';
+  const name=document.createElement('div');name.className='gameName';name.textContent=g.name;
+  const size=document.createElement('div');size.className='gameSize';size.textContent=humanSize(g.file.size);
+  info.append(name,size);
+  const sel=document.createElement('button');sel.textContent=selectedId===g.id?'Selecionado':'Selecionar';sel.onclick=()=>{selectedId=g.id;renderLibrary();setStatus('Selecionado: '+g.name)};
+  const play=document.createElement('button');play.textContent='▶ Jogar';play.onclick=()=>{selectedId=g.id;startGame()};
+  item.append(icon,info,sel,play);list.append(item);
+ });
+}
+romInput.addEventListener('change',()=>{addFiles([...romInput.files]);romInput.value=''});
+$('folderBtn').addEventListener('click',()=>folderInput.click());
+folderInput.addEventListener('change',()=>{addFiles([...folderInput.files]);folderInput.value=''});
+$('removeAll').addEventListener('click',()=>{if(started){setStatus('Recarregue a página para fechar o jogo atual antes de limpar.');return}games=[];selectedId=null;renderLibrary();setStatus('Biblioteca limpa.')});
+$('playSelected').addEventListener('click',startGame);
+const stateInput=$('stateInput');
+stateInput.addEventListener('change',async()=>{
+  const file=stateInput.files && stateInput.files[0];
+  if(!file)return;
+  pendingStateFile=file;
+  if(pendingStateUrl)URL.revokeObjectURL(pendingStateUrl);
+  pendingStateUrl=URL.createObjectURL(file);
+  if(started && window.EJS_emulator && window.EJS_emulator.gameManager && typeof window.EJS_emulator.gameManager.loadState==='function'){
+    try{
+      const bytes=new Uint8Array(await file.arrayBuffer());
+      await window.EJS_emulator.gameManager.loadState(bytes);
+      $('stateStatus').textContent='Save State carregado: '+file.name;
+      setStatus('Save State carregado com sucesso.');
+      return;
+    }catch(err){
+      $('stateStatus').textContent='Arquivo escolhido: '+file.name+'. Não foi possível carregar durante a partida; recarregue a página e inicie o jogo com esse arquivo selecionado.';
+      setStatus('Não consegui carregar esse estado durante a partida. Recarregue a página e selecione o arquivo antes de tocar em Jogar.');
+      return;
+    }
+  }
+  $('stateStatus').textContent='Selecionado: '+file.name+' ('+humanSize(file.size)+'). Inicie o jogo para carregar esse estado.';
+  setStatus('Save State selecionado. Agora toque em Jogar selecionado.');
+});
+$('clearState').addEventListener('click',()=>{
+  if(pendingStateUrl)URL.revokeObjectURL(pendingStateUrl);
+  pendingStateFile=null;pendingStateUrl=null;stateInput.value='';
+  $('stateStatus').textContent='Nenhum Save State selecionado.';
+  setStatus('Save State removido. O jogo iniciará normalmente.');
+});
+
+// Multiplayer UI prototype: be explicit that a real connection is not implemented yet.
+const mpStatus = $('multiplayerStatus');
+$('createRoom').addEventListener('click',()=>{
+  mpStatus.textContent='Sala ainda não criada: falta configurar o servidor de sinalização e a comunicação Link Cable. Nenhum jogador foi conectado.';
+});
+$('joinRoom').addEventListener('click',()=>{
+  const code=$('roomCode').value.trim();
+  mpStatus.textContent=code
+    ? 'Código recebido, mas a conexão ainda não está ativa. Esta versão não conecta jogadores de verdade.'
+    : 'Digite o código da sala do seu amigo. A conexão real ainda precisa ser implementada.';
+});
+$('copyRoom').addEventListener('click',async()=>{
+  const code=$('roomCode').value.trim();
+  if(!code){mpStatus.textContent='Digite um código antes de copiar.';return}
+  try{
+    await navigator.clipboard.writeText(code);
+    mpStatus.textContent='Código copiado.';
+  }catch(e){
+    $('roomCode').select();
+    mpStatus.textContent='Não foi possível copiar automaticamente. Selecione e copie o código manualmente.';
+  }
+});
+function startGame(){
+ const g=games.find(x=>x.id===selectedId);
+ if(!g){switchPage('library');setStatus('Primeiro adicione um jogo na biblioteca.');return}
+ if(!navigator.onLine){setStatus('Sem internet para carregar o núcleo.');return}
+ if(started){setStatus('O emulador já foi iniciado. Recarregue a página para trocar.');return}
+ try{
+  activeUrl=URL.createObjectURL(g.file);
+  gameFrame.classList.remove('empty');gameFrame.innerHTML='';
+  window.EJS_player='#gameFrame';window.EJS_core='gba';window.EJS_gameUrl=activeUrl;
+  window.EJS_gameName=g.file.name.replace(/\.(gba|zip)$/i,'');window.EJS_pathtodata=DATA;
+  window.EJS_language='pt-BR';window.EJS_color='#3295ff';window.EJS_startOnLoaded=true;
+  // EmulatorJS aceita EJS_loadStateURL para restaurar um estado ao iniciar.
+  if(pendingStateUrl){window.EJS_loadStateURL=pendingStateUrl;}else{window.EJS_loadStateURL='';}
+  window.EJS_gameID=Date.now()%1000000;
+  loaderScript=document.createElement('script');loaderScript.src=DATA+'loader.js';loaderScript.async=true;
+  loaderScript.onload=()=>setStatus(pendingStateFile?'Núcleo carregado. O Save State foi enviado para carregamento; aguarde alguns segundos.':'Núcleo carregado para '+g.name);
+  loaderScript.onerror=()=>{started=false;setStatus('Falha ao baixar o núcleo.')};
+  started=true;document.body.appendChild(loaderScript);switchPage('home');setStatus('Carregando '+g.name+'…');
+ }catch(e){setStatus('Erro: '+e.message)}
+}
+$('fullscreen').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await gameFrame.requestFullscreen();else await document.exitFullscreen()}catch(e){}});
+$('landscape').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape')}catch(e){}});
+$('lockLandscape').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');setStatus('Orientação paisagem ativada.')}catch(e){}});
+</script>
+</body></html>
